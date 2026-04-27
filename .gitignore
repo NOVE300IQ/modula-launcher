@@ -1,0 +1,32 @@
+.DS_Store
+*/dist/**/*
+*.gen
+coverage
+node_modules/
+npm-debug.log
+npm-debug.log.*
+thumbs.db
+!.gitkeep
+*.lock
+*.log
+*.bin
+/temp
+.env
+p2p.network
+package-lock.json
+
+# Build Artifacts
+**/build/
+**/modula_release/
+*.exe
+*.zip
+*.asar
+*.gz
+*.blockmap
+*.sha256
+
+## CODE EDITORS
+!.vscode/
+!.zed/
+xmcl-electron-app/build/
+Modula Assets/*.msi

@@ -1,0 +1,176 @@
+name: Deploy Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Releases
+      uses: robinraju/release-downloader@v1.7
+      with:
+        repository: "voxelum/x-minecraft-launcher"
+        tag: ${{ github.event.release.tag_name }}
+        fileName: "*"
+        out-file-path: build
+    - name: Upload to Azure
+      uses: ci010/upload-blob-to-azure@master
+      env:
+        AZURE_ACCOUNT_KEY: ${{ secrets.AZURE_ACCOUNT_KEY }}
+      with:
+        account: xmcl
+        container: releases
+        directory: ./build
+    - name: Update Web Page
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: Deploy
+        token: ${{ secrets.PAT_GITHUB_TOKEN }}
+        ref: 'master'
+        repo: 'voxelum/xmcl-page'
+    - name: Create release version file
+      run: |
+        mkdir releases
+        echo ${{ github.event.release.tag_name }} > ./releases/VERSION
+        cat << EOF > ./releases/latest_version.json
+        ${{ toJSON(github.event.release) }}
+        EOF
+    - name: Upload release version file to Azure
+      uses: ci010/upload-blob-to-azure@master
+      env:
+        AZURE_ACCOUNT_KEY: ${{ secrets.AZURE_ACCOUNT_KEY }}
+      with:
+        account: xmcl
+        container: releases
+        directory: ./releases
+
+  notify:
+    needs:
+      - publish
+    name: Notify Kook and discord
+    runs-on: ubuntu-latest
+    steps:
+    - name: Publish Release Notification
+      uses: voxelum/discord-kook-notify-action@main
+      with:
+        version: ${{ github.event.release.tag_name }}
+        token: ${{ secrets.KOOK_BOT_TOKEN }}
+        discord: ${{ secrets.DISCORD_WEBHOOK }}
+
+  update-brew:
+    needs: 
+      - publish
+    name: Update Brew
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v4
+      with:
+        repository: Voxelum/homebrew-xmcl
+        path: homebrew-xmcl
+    - uses: actions/github-script@v6
+      name: Update Brew Formula
+      with: 
+        result-encoding: string
+        script: |
+          const version = '${{ github.event.release.tag_name }}'.substring(1);
+          const fs = require('fs');
+          const text = `cask "xmcl" do
+            version "${version}"
+            sha256 :no_check
+            arch arm: "arm64", intel: "x86_64"
+
+            on_arm do 
+              url "https://github.com/Voxelum/x-minecraft-launcher/releases/download/v${version}/xmcl-${version}-arm64.dmg"
+            end
+
+            on_intel do
+              url "https://github.com/Voxelum/x-minecraft-launcher/releases/download/v${version}/xmcl-${version}-x64.dmg"
+            end
+
+            name "X Minecraft Launcher"
+            desc "An Open Source Minecraft Launcher with Modern UX. Provides a Disk Efficient way to manage all your Mods!"
+            homepage "https://xmcl.app"
+
+            livecheck do
+              url :url
+              strategy :header_match
+            end
+            
+            app "X Minecraft Launcher.app"
+
+            zap trash: [
+              "~/Applications/X Minecraft Launcher.app",
+              "~/Library/Application Support/xmcl",
+              "~/Library/Preferences/xmcl.plist",
+              "~/Library/Saved Application State/xmcl.savedState"
+            ]
+          end
+          `
+          fs.writeFileSync('./homebrew-xmcl/Casks/xmcl.rb', text);
+    - name: Create Release Note PR
+      uses: peter-evans/create-pull-request@v3
+      with:
+        token: ${{ secrets.PAT_GITHUB_TOKEN }}
+        path: homebrew-xmcl
+        commit-message: "Bump xmcl to ${{ github.event.release.tag_name }}"
+        title: Bump xmcl to ${{ github.event.release.tag_name }}
+        body: Bump xmcl to ${{ github.event.release.tag_name }}
+        reviewers: ci010
+        assignees: ci010
+        branch: ${{ github.event.release.tag_name }}
+
+  update-winget:
+    needs: 
+      - publish
+    name: Upload To winget
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Download Releases
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: "voxelum/x-minecraft-launcher"
+          tag: ${{ github.event.release.tag_name }}
+          fileName: "version"
+      - uses: actions/github-script@v6
+        name: Get Release Version
+        id: version
+        with: 
+          result-encoding: string
+          script: |
+            return '${{ github.event.release.tag_name }}'.substring(1);
+      - name: Update version env
+        run: |
+          echo "VERSION=$(cat ./version)" >> $env:GITHUB_ENV
+      - name: Create winget PR
+        run: |
+          iwr https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          .\wingetcreate.exe update CI010.XMinecraftLauncher -u $Env:URL -v $Env:VERSION -t $Env:TOKEN --submit
+        env:
+          TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
+          URL: ${{ format('https://xmcl-core-api.azurewebsites.net/api/appx?version={0}', steps.version.outputs.result) }}
+
+  # publish-msstore:
+  #   runs-on: windows-latest
+  #   needs:
+  #     - publish
+  #   steps:
+  #   - name: Download Releases
+  #     uses: robinraju/release-downloader@v1.7
+  #     with:
+  #       repository: "voxelum/x-minecraft-launcher"
+  #       tag: ${{ github.event.release.tag_name }}
+  #       fileName: "xmcl-*.appx"
+  #       out-file-path: build
+  #   - name: Steup msstore cli
+  #     uses: microsoft/setup-msstore-cli@main
+  #   - name: Configure msstore cli
+  #     run: |
+  #       msstore reconfigure --tenantId ${{ secrets.AZURE_AD_TENANT_ID }} --clientSecret ${{ secrets.AZURE_AD_CLIENT_SECRET }} --clientId ${{ secrets.AZURE_AD_CLIENT_ID }} --sellerId ${{ secrets.SELLER_ID }}
+  #   - name: Publish appx to msstore
+  #     run: |
+  #       msstore publish -v --appId 9MXJWHXTP4B9 --inputDirectory xmcl-electron-app/build/output

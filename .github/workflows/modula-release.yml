@@ -1,0 +1,50 @@
+name: Modula Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.3.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Modula
+        run: pnpm run build:all
+        env:
+          NODE_ENV: production
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            xmcl-electron-app/build/output*/*.exe
+            xmcl-electron-app/build/output*/*.zip
+            xmcl-electron-app/build/output*/*.AppImage
+            xmcl-electron-app/build/output*/*.deb
+            xmcl-electron-app/build/output*/*.dmg
+            xmcl-electron-app/build/output*/latest.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

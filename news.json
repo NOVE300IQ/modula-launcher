@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "v1.4.0-update",
+      "title": "v1.4.0: The Backup & Sync Update Is Here!",
+      "category": "Modula Updates",
+      "tag": "Update",
+      "date": "2026-04-19",
+      "text": "Introducing the Modula Smart Optimizer! We've also added a Performance Monitor, Discord Rich Presence fixes, and automated JVM tuning. Upgrade now for the smoothest Minecraft experience.",
+      "readMoreLink": "https://github.com/NOVE300IQ/modula-launcher/releases",
+      "newsType": ["Update"],
+      "cardBorder": true,
+      "playPageImage": { 
+        "url": "https://raw.githubusercontent.com/NOVE300IQ/modula-launcher/master/Modula%20Assets/NoveOp.png", 
+        "title": "Smart Optimizer" 
+      }
+    },
+    {
+      "id": "welcome-post",
+      "title": "Welcome to Modula MC Launcher!",
+      "category": "Minecraft: Java Edition",
+      "tag": "News",
+      "date": "2026-04-19",
+      "text": "Modula Launcher is officially out! Experience lightning fast modpack installations, a seamless golden waves UI, and our custom seamless migration tools.",
+      "readMoreLink": "https://discord.gg/gyjG6NjYcR",
+      "newsType": ["News"],
+      "cardBorder": true,
+      "playPageImage": { 
+        "url": "https://i.imgur.com/your_banner_image_here.png", 
+        "title": "Modula Banner" 
+      },
+      "newsPageImage": { 
+        "url": "https://i.imgur.com/your_banner_image_here.png", 
+        "title": "Modula Banner", 
+        "dimensions": {"width": 800, "height": 450} 
+      }
+    }
+  ]
+}

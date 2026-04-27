@@ -1,0 +1,51 @@
+name: Validate
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'xmcl-runtime/**'
+      - 'xmcl-runtime-api/**'
+      - 'xmcl-keystone-ui/**'
+      - 'xmcl-electron-app/**'
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 9.3.0
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+    - name: Install
+      run: |
+        pnpm install
+    - name: Lint
+      run: |
+        pnpm lint
+    - name: Check
+      run: |
+        pnpm check
+    - name: Test
+      run: |
+        pnpm vitest run --exclude 'xmcl/**'
+    - name: Build
+      run: |
+        pnpm run --prefix xmcl-keystone-ui build
+        pnpm run --prefix xmcl-electron-app build
+      env:
+        BUILD_NUMBER: ${{ github.run_number }}
+        NODE_ENV: production
+        CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        WIN_CSC_LINK: ${{ secrets.CODE_SIGN_BASE64 }}
+        APPX_PUBLISHER: ${{ secrets.APPX_PUBLISHER }}
+        WIN_CSC_KEY_PASSWORD: ${{ secrets.CODE_SIGN_PWD }}

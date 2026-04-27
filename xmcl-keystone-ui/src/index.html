@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modula</title>
+    <link rel="stylesheet" href="./assets/google.font.css">
+    <link rel="stylesheet" href="./assets/preload.css">
+    <script src="http://launcher/flights"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+        .unloaded {
+            background: linear-gradient(160deg, #08080f 0%, #0c0c1a 55%, #080810 100%);
+            height: 100vh;
+            width: 100vw;
+            min-width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Subtle ambient light behind logo */
+        .unloaded::before {
+            content: '';
+            position: fixed;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(99, 66, 245, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: ambientPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes ambientPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50%       { transform: scale(1.15); opacity: 0.4; }
+        }
+
+        @keyframes logoEntry {
+            0%   { opacity: 0; transform: scale(0.88) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes textEntry {
+            0%   { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes dotPulse {
+            0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+            40%            { opacity: 1;   transform: scale(1); }
+        }
+
+        #splash-logo {
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            animation: logoEntry 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            position: relative;
+            z-index: 1;
+        }
+
+        #splash-name {
+            font-size: 1.65rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #c4b5fd 0%, #818cf8 50%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            animation: textEntry 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+            position: relative;
+            z-index: 1;
+        }
+
+        #splash-dots {
+            display: flex;
+            gap: 7px;
+            opacity: 0;
+            animation: textEntry 0.4s ease 0.7s forwards;
+            position: relative;
+            z-index: 1;
+        }
+
+        #splash-dots span {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #7c3aed;
+            display: inline-block;
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+
+        #splash-dots span:nth-child(2) { animation-delay: 0.2s; }
+        #splash-dots span:nth-child(3) { animation-delay: 0.4s; }
+    </style>
+</head>
+
+<body class="overflow-y-auto unloaded">
+    <div id="app">
+        <img id="splash-logo" src="./assets/modula-logo.png" alt="Modula">
+        <div id="splash-name">Modula</div>
+        <div id="splash-dots">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+    <script type="module" src="./windows/main/index.ts"></script>
+</body>
+
+</html>

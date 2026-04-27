@@ -1,0 +1,9 @@
+packages:
+  - 'xmcl/packages/**'
+  - 'xmcl-electron-app'
+  - 'xmcl-runtime-api'
+  - 'xmcl-runtime'
+  - 'xmcl-keystone-ui'
+  - 'xmcl-client-vue'
+  - '.github/actions/*'
+  - 'packages/**'
